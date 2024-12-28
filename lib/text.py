@@ -1,2 +1,2 @@
-shop_name = "Greedy SHOP"
-shop_projects = "@Greedy_Projects"
+shop_name = "Duck SHOP"
+shop_chat = "@Greedy_Coop"

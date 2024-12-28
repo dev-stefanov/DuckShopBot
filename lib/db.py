@@ -14,18 +14,28 @@ class User:
 
 ## Category
 class Category:
-    def __init__(self, id: int, name: str):
+    def __init__(self, id: int, name: str, description: str):
         self.id = int(id)
         self.name = str(name)
+        self.description = str(description)
 
 ## Good
 class Good:
-    def __init__(self, id: int, category_id: int, name: str, cost: int, count: int):
+    def __init__(self, id: int, category_id: int, name: str, cost: int, count: str, description: str):
         self.id = int(id)
         self.category = str(category_id)
         self.name = str(name)
-        self.cost = int(cost)
+        self.cost = str(cost)
+        self.count = str(count)
+        self.description = str(description)
+
+## History
+class History:
+    def __init__(self, id: int, good_id: int, count: int, sum: int):
+        self.id = int(id)
+        self.good_id = int(good_id)
         self.count = int(count)
+        self.sum = int(sum)
 
 ## Db
 class DataBase:
@@ -45,14 +55,22 @@ class DataBase:
         );
         CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT                
+            name TEXT,
+            description TEXT                
         );
         CREATE TABLE IF NOT EXISTS goods (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             category TEXT,
             name TEXT,
             cost INTEGER,
-            count INTEGER      
+            count TEXT,
+            description TEXT      
+        );
+        CREATE TABLE IF NOT EXISTS history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            good_id INTEGER,
+            count INTEGER,
+            sum INTEGER
         )''')
         cur.close()
 
@@ -85,16 +103,77 @@ class DataBase:
         res = cur.execute('SELECT * FROM categories WHERE id=?', (id, )).fetchone()
         cur.close()
         return Category(*res)
-
-    def add_good(self, category: str, name: str, cost: int, count: int):
+    
+    def get_goods(self, category):
         cur = self.db.cursor()
-        cur.execute('INSERT INTO goods (category, name, cost, count) VALUES (?, ?, ?, ?)', (category, name, cost, count))
+        res = cur.execute('SELECT * FROM goods WHERE category=?', (category, )).fetchall()
+        cur.close()
+        return [Good(*x) for x in res]
+    
+    def get_all_goods(self):
+        cur = self.db.cursor()
+        res = cur.execute('SELECT * FROM goods').fetchall()
+        cur.close()
+        return [Good(*x) for x in res]
+    
+    def get_good(self, id):    
+        cur = self.db.cursor()
+        res = cur.execute('SELECT * from goods WHERE id=?', (id, )).fetchone()
+        cur.close()
+        return Good(*res)
+    
+    def add_category(self, name: str, description: str):
+        cur = self.db.cursor()
+        cur.execute('INSERT INTO categories (name, description) VALUES (?, ?)', (name, description))
+        self.db.commit()
+        cur.close()
+        return f'Категория: {name} добавлена'
+
+    def add_good(self, category: str, name: str, cost: int, count: int, description: str):
+        cur = self.db.cursor()
+        cur.execute('INSERT INTO goods (category, name, cost, count, description) VALUES (?, ?, ?, ?, ?)', (category, name, cost, count, description))
+        self.db.commit()
+        cur.close()
+        return f'Товар: {name} добавлен'
+
+    def del_category(self, id: int, name: str):
+        cur = self.db.cursor()
+        res = cur.execute('SELECT * FROM categories WHERE id=?', (id, )).fetchone()
+        if res == None:
+            self.db.commit()
+            cur.close()
+            return f"Такой категории нет"
+        else:
+            cur.execute('DELETE FROM categories WHERE id=?', (id, ))
+            cur.execute('DELETE FROM goods WHERE category=?', (name, ))
+            self.db.commit()
+            cur.close()
+            return f"Категория: {name} удалена"
+        
+    def del_good(self, id: int, name: str):
+        cur = self.db.cursor()
+        res = cur.execute('SELECT * FROM goods WHERE id=?', (id, )).fetchone()
+        if res == None:
+            self.db.commit()
+            cur.close()
+            return "Такого товара нет"
+        else:
+            cur.execute('DELETE FROM goods WHERE id=?', (id, ))
+            self.db.commit()
+            cur.close()
+            return f"Товар: {name} удален"
+        
+    def edit_category(self, id, name_param, new_param):
+        cur = self.db.cursor()
+        cur.execute(f'UPDATE categories SET {name_param}=? WHERE id=?', (new_param, id))
         self.db.commit()
         cur.close()
 
-    def add_category(self, name: str):
+    def edit_good(self, id, name_param, new_param):
         cur = self.db.cursor()
-        cur.execute('INSERT INTO categories (name) VALUES (?)', (name,))
+        cur.execute(f'UPDATE goods SET {name_param}=? WHERE id=?', (new_param, id))
         self.db.commit()
         cur.close()
+    
+
     

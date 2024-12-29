@@ -27,5 +27,5 @@ def deposite_url(user_id, sum):
 ) 
     return quickpay.base_url
 
-def check_payment(label);
-    pass
+def check_payment(label):
+      pass
